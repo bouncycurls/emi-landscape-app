@@ -11,23 +11,22 @@ export default function GeneratePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('https://emi-landscape-backend.replit.app/generate-layout', {
+      const res = await fetch('https://emi-landscape-backend.bouncycurls.replit.app/generate-layout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clientInput,
-          photoDescription,
+          client_input: clientInput,
+          photo_description: photoDescription,
           budget,
           preferences,
         }),
       });
+
       const data = await res.json();
-      setResponse(data.response || JSON.stringify(data));
-    } catch (err) {
+      setResponse(data.layout || JSON.stringify(data));
+    } catch (err: any) {
       console.error(err);
-      setResponse('An error occurred');
+      setResponse('An error occurred: ' + err.message);
     }
   };
 
