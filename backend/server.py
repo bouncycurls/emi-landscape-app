@@ -35,6 +35,18 @@ class StatusCheck(BaseModel):
 class StatusCheckCreate(BaseModel):
     client_name: str
 
+class LayoutRequest(BaseModel):
+    projectName: str
+    description: str
+    requirements: str
+    style: str
+
+class LayoutResponse(BaseModel):
+    title: str
+    layout_plan: str
+    project_name: str
+    style: str
+
 # Add your routes to the router instead of directly to app
 @api_router.get("/")
 async def root():
@@ -51,6 +63,89 @@ async def create_status_check(input: StatusCheckCreate):
 async def get_status_checks():
     status_checks = await db.status_checks.find().to_list(1000)
     return [StatusCheck(**status_check) for status_check in status_checks]
+
+@api_router.post("/generate-layout", response_model=LayoutResponse)
+async def generate_layout(layout_request: LayoutRequest):
+    """
+    Generate a layout plan based on the provided requirements
+    """
+    # Generate layout plan based on the input
+    layout_plan = f"""
+🏗️ Layout Plan for "{layout_request.projectName}"
+
+📋 Project Overview:
+{layout_request.description}
+
+🎨 Style: {layout_request.style.title()}
+
+📝 Requirements Analysis:
+{layout_request.requirements}
+
+🔧 Recommended Layout Structure:
+
+1. **Entry/Welcome Area**
+   - Clean, welcoming entrance
+   - Clear navigation indicators
+   - Brand/project identity display
+
+2. **Main Content Zones**
+   - Primary content area ({layout_request.style} styling)
+   - Secondary content sections
+   - Interactive elements placement
+
+3. **Functional Areas**
+   - Navigation menu (header/sidebar)
+   - User interaction zones
+   - Content display areas
+
+4. **Visual Elements**
+   - Color scheme: {layout_request.style} palette
+   - Typography: Clean, readable fonts
+   - Spacing: Optimal white space utilization
+
+5. **User Experience Flow**
+   - Intuitive navigation path
+   - Clear call-to-action placement
+   - Responsive design considerations
+
+6. **Technical Considerations**
+   - Mobile-first approach
+   - Accessibility compliance
+   - Performance optimization
+
+💡 Key Recommendations:
+- Maintain consistent {layout_request.style} theme throughout
+- Ensure all requirements are addressed in the layout
+- Consider user journey and interaction patterns
+- Implement responsive design principles
+
+🎯 Next Steps:
+1. Review and approve this layout plan
+2. Create detailed wireframes
+3. Develop interactive prototypes
+4. Implement responsive design
+5. Test across different devices
+"""
+
+    # Store the layout request in database
+    layout_data = {
+        "id": str(uuid.uuid4()),
+        "project_name": layout_request.projectName,
+        "description": layout_request.description,
+        "requirements": layout_request.requirements,
+        "style": layout_request.style,
+        "layout_plan": layout_plan,
+        "created_at": datetime.utcnow()
+    }
+    
+    await db.layout_requests.insert_one(layout_data)
+    
+    return LayoutResponse(
+        title=f"Layout Plan: {layout_request.projectName}",
+        layout_plan=layout_plan,
+        project_name=layout_request.projectName,
+        style=layout_request.style
+    )
 
 # Include the router in the main app
 app.include_router(api_router)
